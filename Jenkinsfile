@@ -18,13 +18,19 @@ pipeline {
             steps {
                 sshagent(['vps-ssh']) {
                     sh '''
+                        # Создаем папку, если ее нет, и очищаем
                         mkdir -p /opt/jbot
                         rm -rf /opt/jbot/*
-                        git clone git@github.com:richenhub/jirabot.git /opt/jbot
-                        cd /opt/jbot
-                        git pull origin main
-                        npm ci
-                        pm2 restart jira-bot
+
+                        # Копируем с Jenkins на VPS
+                        rsync -avz --exclude '.git' . vps_user@185.105.89.250:/opt/jbot/
+
+                        # На VPS: ставим зависимости и перезапускаем
+                        ssh vps_user@185.105.89.250 '
+                            cd /opt/jbot
+                            npm ci
+                            pm2 restart jira-bot
+                        '
                     '''
                 }
             }
