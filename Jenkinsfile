@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/tamerbokk/jirabot.git'
+                git branch: 'main', url: 'https://github.com/richenhub/jirabot.git'
             }
         }
 
