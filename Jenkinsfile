@@ -18,6 +18,9 @@ pipeline {
             steps {
                 sshagent(['vps-ssh']) {
                     sh '''
+                        mkdir -p /opt/jbot
+                        rm -rf /opt/jbot/*
+                        git clone git@github.com:richenhub/jirabot.git /opt/jbot
                         cd /opt/jbot
                         git pull origin main
                         npm ci
