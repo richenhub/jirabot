@@ -2,11 +2,14 @@ pipeline {
     agent any
 
     stages {
-        stage('Checkout') {
-            steps {
-                git branch: 'main', url: 'https://github.com/richenhub/jirabot.git'
-            }
-        }
+        //stage('Checkout') {
+            //steps {
+                // git branch: 'main', url: 'https://github.com/richenhub/jirabot.git'
+                stage('Checkout') {
+                    git url: 'git@github.com:richenhub/jirabot.git', credentialsId: 'github-ssh'
+                }
+            // }
+        // }
 
         stage('Install Dependencies') {
             steps {
