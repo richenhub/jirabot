@@ -1,0 +1,30 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/tamerbokk/jirabot.git'
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh 'npm ci'
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                sshagent (credentials: ['vps-ssh-key']) {
+                    sh '''
+                    cd /opt/jbot
+                    git pull origin main
+                    npm ci
+                    pm2 restart jira-bot
+                    '''
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,28 @@
+{
+  "name": "jira-telegram-bot",
+  "version": "1.0.0",
+  "description": "Telegram bot for Jira task management",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon --watch . --ext js,json index.js"
+  },
+  "keywords": [
+    "telegram",
+    "bot",
+    "jira"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.6.0",
+    "dotenv": "^16.3.1",
+    "https-proxy-agent": "^7.0.6",
+    "node-telegram-bot-api": "^0.64.0",
+    "openai": "^6.3.0",
+    "undici": "^7.16.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

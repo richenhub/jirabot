@@ -1,0 +1,6 @@
+{
+  "watch": ["bot.js", "userStore.js"],
+  "ext": "js",
+  "ignore": ["users.json", "node_modules/"],
+  "delay": 1000
+}
