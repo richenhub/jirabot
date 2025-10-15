@@ -1,10 +1,19 @@
 pipeline {
     agent any
 
+    environment {
+        DEPLOY_USER = 'vps_user'
+        DEPLOY_HOST = 'your.server.com'
+        APP_PATH = '/opt/jbot'
+        RELEASES_PATH = "${APP_PATH}/releases"
+        CURRENT_PATH = "${APP_PATH}/current"
+        SSH_CREDENTIALS = 'vps_user'
+    }
+
     stages {
-        stage('Checkout') {
+        stage('Checkout SCM') {
             steps {
-                git url: 'git@github.com:richenhub/jirabot.git', branch: 'main', credentialsId: 'github-ssh'
+                checkout scm
             }
         }
 
@@ -16,22 +25,29 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                sshagent(['vps-ssh']) {
-                    sh '''
-                        # Создаем папку, если ее нет, и очищаем
-                        mkdir -p /opt/jbot
-                        rm -rf /opt/jbot/*
+                sshagent([SSH_CREDENTIALS]) {
+                    script {
+                        def releaseDir = "${RELEASES_PATH}/${env.BUILD_ID}"
 
-                        # Копируем с Jenkins на VPS
-                        rsync -avz --exclude '.git' . vps_user@185.105.89.250:/opt/jbot/
+                        sh """
+                            ssh ${DEPLOY_USER}@${DEPLOY_HOST} '
+                                mkdir -p ${releaseDir} &&
+                                mkdir -p ${RELEASES_PATH}
+                            '
+                        """
 
-                        # На VPS: ставим зависимости и перезапускаем
-                        ssh vps_user@185.105.89.250 '
-                            cd /opt/jbot
-                            npm ci
-                            pm2 restart jira-bot
-                        '
-                    '''
+                        // Копируем файлы в новую папку
+                        sh """
+                            rsync -av --exclude='.git' ./ ${DEPLOY_USER}@${DEPLOY_HOST}:${releaseDir}/
+                        """
+
+                        // Обновляем символическую ссылку
+                        sh """
+                            ssh ${DEPLOY_USER}@${DEPLOY_HOST} '
+                                ln -sfn ${releaseDir} ${CURRENT_PATH}
+                            '
+                        """
+                    }
                 }
             }
         }
