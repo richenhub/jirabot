@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git url: 'git@github.com:richenhub/jirabot.git', credentialsId: 'github-ssh'
+                git url: 'git@github.com:richenhub/jirabot.git', branch: 'main', credentialsId: 'github-ssh'
             }
         }
 
