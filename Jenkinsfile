@@ -34,7 +34,7 @@ pipeline {
                         git clean -fd
                         
                         # Обновить remote URL с credentials
-                        git remote set-url origin https://${credentialsId}@github.com/richenhub/jirabot.git
+                        git remote set-url origin https://github.com/richenhub/jirabot.git
                         
                         # Получить последние изменения
                         git fetch origin main
