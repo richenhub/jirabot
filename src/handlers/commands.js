@@ -75,7 +75,7 @@ const setupCommandHandlers = (bot) => {
 
   bot.onText(/\/menu/, (msg) => {
     const chatId = msg.chat.id;
-    bot.sendMessage(chatId, "Главное меню:", {
+    bot.sendMessage(chatId, "☰ Главное меню:", {
       ...mainMenu,
     });
   });
@@ -83,7 +83,7 @@ const setupCommandHandlers = (bot) => {
   bot.on("callback_query", async (callbackQuery) => {
     const msg = callbackQuery.message;
     if (callbackQuery.data === "main_menu") {
-      await bot.sendMessage(msg.chat.id, "Главное меню:", [...mainMenu]);
+      await bot.sendMessage(msg.chat.id, "☰ Главное меню:", [...mainMenu]);
     }
   });
 };
