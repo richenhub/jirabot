@@ -8,7 +8,12 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://richenhub: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@github.com/richenhub/jirabot.git'
+                checkout([$class: 'GitSCM',
+                          branches: [[name: '*/main']],
+                          userRemoteConfigs: [[
+                              url: 'https://richenhub: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@github.com/richenhub/jirabot.git'
+                          ]],
+                          extensions: [[$class: 'WipeWorkspace']]])
             }
         }
 
@@ -20,14 +25,12 @@ pipeline {
 
         stage('Build / Validate') {
             steps {
-                // Здесь можно добавить линтер, тесты и т.д.
                 echo 'Dependencies installed. Skipping build phase (Node bot).'
             }
         }
 
         stage('Restart bot') {
             steps {
-                // Останавливаем и перезапускаем через pm2
                 sh '''
                     if ! command -v pm2 >/dev/null; then
                       npm install -g pm2
