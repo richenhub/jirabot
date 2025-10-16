@@ -3,60 +3,37 @@ pipeline {
 
     environment {
         NODE_ENV = 'production'
+        REPO_URL = 'https://richenhub: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@github.com/richenhub/jirabot.git'
+        APP_NAME = 'jira-bot'
+        APP_ENTRY = 'index.js'
     }
 
     stages {
 
         stage('Checkout') {
             steps {
+                echo '📥 Cloning repository...'
                 checkout([
                     $class: 'GitSCM',
                     branches: [[name: '*/main']],
-                    userRemoteConfigs: [[
-                        url: 'https://richenhub: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@github.com/richenhub/jirabot.git'
-                    ]],
+                    userRemoteConfigs: [[ url: "${env.REPO_URL}" ]],
                     extensions: [
-                        [$class: 'WipeWorkspace'],
-                        [$class: 'CloneOption', noTags: false, shallow: false, depth: 0, reference: '', timeout: 20]
+                        [$class: 'WipeWorkspace'], 
+                        [$class: 'CloneOption', noTags: false, shallow: false, depth: 0, timeout: 20]
                     ]
-                    
                 ])
-                sh 'git status'
-                sh 'git log -1'
+                sh 'git log -1 --oneline'
             }
         }
 
         stage('Install dependencies') {
             steps {
+                echo '📦 Installing dependencies...'
+                sh 'node -v && npm -v'
                 sh 'npm ci'
             }
         }
 
         stage('Build / Validate') {
             steps {
-                echo 'Dependencies installed. Skipping build phase (Node bot).'
-            }
-        }
-
-        stage('Restart bot') {
-            steps {
-                sh '''
-                    if ! command -v pm2 >/dev/null; then
-                      npm install -g pm2
-                    fi
-                    pm2 delete jira-bot || true
-                    pm2 start index.js --name jira-bot
-                '''
-            }
-        }
-    }
-
-    post {
-        failure {
-            echo '❌ Build failed!'
-        }
-        success {
-            echo '✅ Bot updated and restarted successfully.'
-        }
-    }
-}
+                echo '
