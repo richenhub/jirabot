@@ -341,8 +341,8 @@ const setupCallbackHandlers = (bot) => {
           false
         );
         bot.answerCallbackQuery(query.id, { text: `Показан: ${statusName}` });
-      } else if (data.startsWith("taskedit_")) {
-        const issueKey = data.replace("taskedit_", "");
+      } else if (data.startsWith("te_")) {
+        const issueKey = data.replace("te_", "");
         await showTaskEdit(bot, chatId, issueKey, query.message.message_id);
         bot.answerCallbackQuery(query.id);
       } else if (data === "toggle_comments_notifications") {

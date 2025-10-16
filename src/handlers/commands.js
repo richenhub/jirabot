@@ -16,8 +16,8 @@ const setupCommandHandlers = (bot) => {
       return bot.sendMessage(chatId, "Для начала работы введите /login");
     }
 
-    if (param.startsWith("taskedit_")) {
-      const issueKey = param.replace("taskedit_", "");
+    if (param.startsWith("te_")) {
+      const issueKey = param.replace("te_", "");
       if (!userData?.token) {
         await bot.sendMessage(
           chatId,

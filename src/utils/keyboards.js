@@ -38,7 +38,7 @@ const createTaskButtons = (pageTasks) => {
   return pageTasks.map((issue) => [
     {
       text: `✏️ ${issue.key}`,
-      url: `https://t.me/${process.env.BOT_LOGIN}?start=taskedit_${issue.key}`,
+      url: `https://t.me/${process.env.BOT_LOGIN}?start=te_${issue.key}`,
     },
   ]);
 };

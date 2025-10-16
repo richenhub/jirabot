@@ -47,7 +47,7 @@ const notifyAssigneeStatusChange = async (
               [
                 {
                   text: "Открыть задачу",
-                  url: `https://t.me/${process.env.BOT_LOGIN}?start=taskedit_${issueKey}`,
+                  url: `https://t.me/${process.env.BOT_LOGIN}?start=te_${issueKey}`,
                 },
               ],
             ],
@@ -98,7 +98,7 @@ const notifyNewAssignee = async (
               [
                 {
                   text: "Открыть задачу",
-                  url: `https://t.me/${process.env.BOT_LOGIN}?start=taskedit_${issueKey}`,
+                  url: `https://t.me/${process.env.BOT_LOGIN}?start=te_${issueKey}`,
                 },
               ],
             ],
@@ -177,22 +177,31 @@ const checkUserNotifications = async (bot, user) => {
         const issueKey = issue.key;
         const prevState = user.issueStates?.[issueKey];
 
-        if (!prevState) {
-          newAssignments.push(issue);
-        } else if (prevState.status !== issue.fields.status.name) {
-          statusChanges.push({
-            issue,
-            oldStatus: prevState.status,
-            newStatus: issue.fields.status.name,
-          });
+        if (prevState) {
+          // Задача уже отслеживалась - проверяем изменения
+          if (prevState.status !== issue.fields.status.name) {
+            statusChanges.push({
+              issue,
+              oldStatus: prevState.status,
+              newStatus: issue.fields.status.name,
+            });
+          }
+
+          if (
+            prevState.assignee !== issue.fields.assignee?.name &&
+            issue.fields.assignee?.name === user.username
+          ) {
+            newAssignments.push(issue);
+          }
         }
+        // Если prevState нет - это первый раз видим задачу, просто сохраняем без уведомления
       }
     }
 
     if (newAssignments.length) {
       for (const issue of newAssignments) {
         const message =
-          `🔔 Изменен статус вашей задачи:\n\n` +
+          `🔔 Вы назначены ответственным за задачу:\n\n` +
           `📌 ${issue.key}\n` +
           `${issue.fields.summary}\n\n` +
           `📊 Статус: ${issue.fields.status.name}`;
@@ -203,7 +212,7 @@ const checkUserNotifications = async (bot, user) => {
               [
                 {
                   text: "Открыть задачу",
-                  url: `https://t.me/${process.env.BOT_LOGIN}?start=taskedit_${issue.key}`,
+                  url: `https://t.me/${process.env.BOT_LOGIN}?start=te_${issue.key}`,
                 },
               ],
             ],
@@ -230,7 +239,7 @@ const checkUserNotifications = async (bot, user) => {
               [
                 {
                   text: "Открыть задачу",
-                  url: `https://t.me/${process.env.BOT_LOGIN}?start=taskedit_${change.issue.key}`,
+                  url: `https://t.me/${process.env.BOT_LOGIN}?start=te_${change.issue.key}`,
                 },
               ],
             ],
@@ -257,27 +266,35 @@ const checkUserNotifications = async (bot, user) => {
     });
 
     if (user.commentsNotificationsEnabled !== false) {
+      const lastCommentCheck = user.lastCommentCheck || {};
+
       for (const issue of uniqueIssues) {
         const issueKey = issue.key;
 
         try {
           const comments = await getComments(user.token, issueKey);
 
-          const lastCommentCheck =
-            user.lastCommentCheck?.[issueKey] || lastCheckTime;
+          const lastCheck = lastCommentCheck[issueKey] || lastCheckTime;
           const newComments = comments.filter(
             (c) =>
-              new Date(c.created).getTime() > lastCommentCheck &&
-              c.author.name !== user.username // Не уведомляем о своих комментариях
+              new Date(c.created).getTime() > lastCheck &&
+              c.author.name !== user.username
           );
 
           if (newComments.length > 0) {
+            let latestCommentTime = lastCheck;
+
             for (const comment of newComments) {
+              const commentTime = new Date(comment.created).getTime();
+              if (commentTime > latestCommentTime) {
+                latestCommentTime = commentTime;
+              }
+
               const commentBody = comment.body
                 ? comment.body.substring(0, 200)
                 : "";
               const message =
-                `💬 Новый комментарий в задаче:\n\n` +
+                `💬 Новый комментарий в вашей задаче:\n\n` +
                 `📌 ${issue.key}\n` +
                 `${issue.fields.summary}\n\n` +
                 `👤 Автор: ${comment.author.displayName}\n` +
@@ -291,7 +308,7 @@ const checkUserNotifications = async (bot, user) => {
                     [
                       {
                         text: "Открыть задачу",
-                        url: `https://t.me/${process.env.BOT_LOGIN}?start=taskedit_${issue.key}`,
+                        url: `https://t.me/${process.env.BOT_LOGIN}?start=te_${issue.key}`,
                       },
                     ],
                   ],
@@ -302,6 +319,8 @@ const checkUserNotifications = async (bot, user) => {
                 `✅ Notified user ${user.username} about comment in ${issue.key}`
               );
             }
+
+            lastCommentCheck[issueKey] = latestCommentTime;
           }
         } catch (commentError) {
           console.error(
@@ -309,11 +328,6 @@ const checkUserNotifications = async (bot, user) => {
             commentError.message
           );
         }
-      }
-
-      const lastCommentCheck = user.lastCommentCheck || {};
-      for (const issue of uniqueIssues) {
-        lastCommentCheck[issue.key] = Date.now();
       }
 
       userStore.set(user.chatId, { lastCommentCheck });

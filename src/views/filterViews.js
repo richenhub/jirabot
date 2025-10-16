@@ -86,13 +86,17 @@ const showTasksByFilter = async (
       issues.length
     }\nСтраница ${page + 1} из ${totalPages}\n\nJQL: ${filter.jql}\n\n`;
 
+    console.log(pageTasks);
+
     const buttons = pageTasks.map((i) => {
-      text += `🔹 <a href="https://${process.env.JIRA_API_URL}/browse/${i.key}">${i.key}</a>\n`;
+      text += `🔹 <a href="${process.env.JIRA_API_URL}/browse/${i.key}">${i.key}</a> - ${i.fields.summary}\n`;
+
+      console.log({ text });
 
       return [
         {
-          text: `🔹 ${i.key}`,
-          callback_data: `taskedit_${i.key}`,
+          text: `${i.key}`,
+          callback_data: `te_${i.key}`,
         },
       ];
     });
@@ -116,6 +120,8 @@ const showTasksByFilter = async (
 
     buttons.push([{ text: "← К фильтрам", callback_data: "back_to_filters" }]);
 
+    console.log({ navButtons });
+
     const opts = {
       chat_id: chatId,
       parse_mode: "HTML",
@@ -130,8 +136,10 @@ const showTasksByFilter = async (
       await bot.sendMessage(chatId, text, opts);
     }
   } catch (e) {
-    console.error(e.message);
-    bot.sendMessage(chatId, "Ошибка выполнения фильтра: " + e.message);
+    bot.sendMessage(
+      chatId,
+      "Ошибка выполнения фильтра: " + filter.jql + "/" + e.message
+    );
   }
 };
 

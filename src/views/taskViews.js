@@ -126,7 +126,7 @@ const showTasksByStatus = async (
       const author = escapeHtml(issue.fields.reporter?.displayName || "—");
       const key = escapeHtml(issue.key);
 
-      text += `🔹 <a href="https://${process.env.JIRA_API_URL}/browse/${key}">${key}</a>\n`;
+      text += `🔹 <a href="${process.env.JIRA_API_URL}/browse/${key}">${key}</a>\n`;
       text += `${summary}${issue.fields.summary.length > 120 ? "..." : ""}\n`;
       text += `👤 ${author} | 📅 ${date}\n\n`;
     });
