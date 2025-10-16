@@ -84,7 +84,7 @@ const showTasksByFilter = async (
 
     let text = `📋 ${escapeHtml(filter.name)}\nВсего задач: ${
       issues.length
-    }\nСтраница ${page + 1} из ${totalPages}\n\nJQL: ${filter.jql}`;
+    }\nСтраница ${page + 1} из ${totalPages}\n\nJQL: ${filter.jql}\n\n`;
 
     const buttons = [];
 
