@@ -7,10 +7,9 @@ properties([
 pipeline {
     agent any
 
-    // ДОБАВЬТЕ ЭТО ⬇️
     triggers {
-        githubPush()  // Триггер на GitHub push
-        pollSCM('H/5 * * * *')  // Опционально: проверка каждые 5 минут (если webhook не работает)
+        githubPush() 
+        pollSCM('H/5 * * * *') 
     }
 
     environment {
