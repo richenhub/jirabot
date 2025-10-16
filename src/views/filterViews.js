@@ -75,7 +75,7 @@ const showTasksByFilter = async (
           ...opts,
         });
       }
-      return bot.sendMessage(chatId, msg);
+      return bot.sendMessage(chatId, msg, opts);
     }
 
     const totalPages = Math.ceil(issues.length / TASKS_PER_PAGE);
@@ -86,42 +86,45 @@ const showTasksByFilter = async (
       issues.length
     }\nСтраница ${page + 1} из ${totalPages}\n\nJQL: ${filter.jql}\n\n`;
 
-    const buttons = [];
+    const buttons = pageTasks.map((i) => [
+      {
+        text: `🔹 ${i.key} — ${i.fields.summary}`,
+        callback_data: `taskedit_${i.key}`,
+      },
+    ]);
 
-    pageTasks.forEach((i) => {
-      text += `🔹 <a href="https://${process.env.JIRA_API_URL}/browse/${i.key}">${i.key}</a> — ${i.fields.summary}\n`;
-
-      buttons.push([
-        {
-          text: `✏️ ${i.key}`,
-          url: `https://t.me/${process.env.BOT_LOGIN}?start=taskedit_${i.key}`,
-        },
-      ]);
-    });
-
-    const navButtons = createPaginationButtons(
-      page,
-      totalPages,
-      filter.name,
-      "filter_page"
-    );
+    const navButtons = [];
+    if (page > 0)
+      navButtons.push({
+        text: "⬅️ Назад",
+        callback_data: `filter_page_${filter.name.replace(/ /g, "~")}_${
+          page - 1
+        }`,
+      });
+    if (page + 1 < totalPages)
+      navButtons.push({
+        text: "➡️ Вперёд",
+        callback_data: `filter_page_${filter.name.replace(/ /g, "~")}_${
+          page + 1
+        }`,
+      });
     if (navButtons.length) buttons.push(navButtons);
+
+    // кнопка назад к фильтрам
     buttons.push([{ text: "← К фильтрам", callback_data: "back_to_filters" }]);
 
+    const opts = {
+      chat_id: chatId,
+      parse_mode: "HTML",
+      disable_web_page_preview: true,
+      reply_markup: { inline_keyboard: buttons },
+      message_id: messageId,
+    };
+
     if (messageId) {
-      await bot.editMessageText(text, {
-        chat_id: chatId,
-        parse_mode: "HTML",
-        disable_web_page_preview: true,
-        reply_markup: { inline_keyboard: buttons },
-        message_id: messageId,
-      });
+      await bot.editMessageText(text, opts);
     } else {
-      bot.sendMessage(chatId, text, {
-        parse_mode: "HTML",
-        disable_web_page_preview: true,
-        reply_markup: { inline_keyboard: buttons },
-      });
+      await bot.sendMessage(chatId, text, opts);
     }
   } catch (e) {
     console.error(e.message);
