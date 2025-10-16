@@ -89,7 +89,7 @@ const showTasksByFilter = async (
     const buttons = [];
 
     pageTasks.forEach((i) => {
-      text += `🔹 <a href="https://${process.env.JIRA_API_URL}/browse/${i.key}">${i.key} — ${i.fields.summary}</a>\n`;
+      text += `🔹 <a href="https://${process.env.JIRA_API_URL}/browse/${i.key}">${i.key}</a> — ${i.fields.summary}\n`;
 
       buttons.push([
         {
