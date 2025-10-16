@@ -33,26 +33,26 @@ pipeline {
             }
         }
 
-        stage('Checkout') {
-            steps {
-                echo '📥 Fetching latest code from GitHub...'
-                deleteDir()
+        // stage('Checkout') {
+        //     steps {
+        //         echo '📥 Fetching latest code from GitHub...'
+        //         deleteDir()
 
-                sh 'git checkout main'
+        //         sh 'git checkout main'
                 
-                checkout([
-                    $class: 'GitSCM',
-                    branches: [[name: '*/main']],
-                    userRemoteConfigs: [[
-                        credentialsId: '6a0b07eb-12fb-48a5-9352-3e9eb58fa0d7',
-                        url: 'https://github.com/richenhub/jirabot.git'
-                    ]]
-                ])
+        //         checkout([
+        //             $class: 'GitSCM',
+        //             branches: [[name: '*/main']],
+        //             userRemoteConfigs: [[
+        //                 credentialsId: '6a0b07eb-12fb-48a5-9352-3e9eb58fa0d7',
+        //                 url: 'https://github.com/richenhub/jirabot.git'
+        //             ]]
+        //         ])
 
                 
-                sh 'git log -1 --oneline'
-            }
-        }
+        //         sh 'git log -1 --oneline'
+        //     }
+        // }
 
         stage('Install dependencies') {
             steps {
