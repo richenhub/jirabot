@@ -124,8 +124,8 @@ const showTasksByFilter = async (
       });
     }
   } catch (e) {
-    console.error(e);
-    bot.sendMessage(chatId, "Ошибка выполнения фильтра");
+    console.error(e.message);
+    bot.sendMessage(chatId, "Ошибка выполнения фильтра: " + e.message);
   }
 };
 
