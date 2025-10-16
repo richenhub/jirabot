@@ -5,25 +5,16 @@ pipeline {
         NODE_ENV = 'production'
         APP_NAME = 'jira-bot'
         APP_ENTRY = 'index.js'
-        // Используйте credentials вместо токена в URL
-        GIT_CREDENTIALS = credentials('github-token-id') 
     }
 
     stages {
         stage('Checkout') {
             steps {
-                echo '📥 Cloning repository...'
-                checkout([
-                    $class: 'GitSCM',
-                    branches: [[name: '*/main']],
-                    userRemoteConfigs: [[ 
-                        url: 'https://github.com/richenhub/jirabot.git',
-                        credentialsId: 'github-token-id' // ID из Jenkins Credentials
-                    ]],
-                    extensions: [
-                        [$class: 'CloneOption', noTags: false, shallow: false, depth: 0, timeout: 20]
-                    ]
-                ])
+                echo '📥 Cloning private repository...'
+                git branch: 'main',
+                    credentialsId: 'github-credentials',
+                    url: 'https://github.com/richenhub/jirabot.git'
+                
                 sh 'git log -1 --oneline'
             }
         }
@@ -39,19 +30,18 @@ pipeline {
         stage('Build / Validate') {
             steps {
                 echo '🔨 Building and validating...'
-                // Добавьте ваши команды сборки/валидации
-                sh 'npm run build || true'  // если есть build скрипт
-                sh 'npm test || true'       // если есть тесты
+                sh 'npm run build || echo "No build script"'
+                sh 'npm test || echo "No tests"'
             }
         }
 
         stage('Deploy') {
             steps {
                 echo '🚀 Deploying application...'
-                // Пример с PM2
                 sh """
                     pm2 stop ${APP_NAME} || true
-                    pm2 start ${APP_ENTRY} --name ${APP_NAME}
+                    pm2 delete ${APP_NAME} || true
+                    pm2 start ${APP_ENTRY} --name ${APP_NAME} --node-args="--max-old-space-size=2048"
                     pm2 save
                 """
             }
@@ -64,6 +54,9 @@ pipeline {
         }
         failure {
             echo '❌ Pipeline failed!'
+        }
+        always {
+            cleanWs()
         }
     }
 }
