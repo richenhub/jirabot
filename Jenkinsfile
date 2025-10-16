@@ -10,8 +10,6 @@ pipeline {
     environment {
         NODE_ENV = 'production'
         APP_NAME = 'jira-bot'
-        APP_ENTRY = 'index.js'
-        DEPLOY_DIR = '/opt/jbot'
     }
 
     options {
@@ -33,7 +31,7 @@ pipeline {
                     ]]
                 ])
                 
-                sh 'git log -1 --pretty=format:"%h - %s - %an"'
+                sh 'git log -1 --oneline'
             }
         }
 
@@ -48,25 +46,22 @@ pipeline {
             steps {
                 echo '🚀 Deploying application...'
                 sh """
-                    # Создать директорию (без sudo)
-                    mkdir -p ${DEPLOY_DIR}
-                    
-                    # Остановить старое приложение
+                    # Остановить и удалить старый процесс
                     pm2 stop ${APP_NAME} || true
                     pm2 delete ${APP_NAME} || true
                     
-                    # Скопировать новый код
-                    rm -rf ${DEPLOY_DIR}/*
-                    cp -r . ${DEPLOY_DIR}/
+                    # Запустить через npm start
+                    pm2 start npm --name ${APP_NAME} -- start
                     
-                    # Запустить приложение
-                    cd ${DEPLOY_DIR}
-                    pm2 start ${APP_ENTRY} --name ${APP_NAME}
+                    # Или если нужно указать директорию
+                    # pm2 start npm --name ${APP_NAME} --cwd \$(pwd) -- start
+                    
                     pm2 save
                     
                     echo "=== Deployment Complete ==="
+                    echo "Running from: \$(pwd)"
                     pm2 list
-                    pm2 describe ${APP_NAME}
+                    pm2 logs ${APP_NAME} --lines 20 --nostream
                 """
             }
         }
@@ -75,7 +70,7 @@ pipeline {
     post {
         success {
             echo '✅ Deployment successful!'
-            sh 'git log -1 --pretty=format:"Deployed: %h - %s"'
+            sh 'git log -1 --pretty=format:"✅ Deployed: %h - %s"'
         }
         failure {
             echo '❌ Deployment failed!'
