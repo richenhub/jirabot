@@ -19,22 +19,42 @@ pipeline {
     }
 
     stages {
-        stage('Checkout') {
+
+        stage('Clean Workspace') {
             steps {
-                echo '📥 Cloning private repository...'
-                git branch: 'main',
-                    credentialsId: '6a0b07eb-12fb-48a5-9352-3e9eb58fa0d7',
-                    url: 'https://github.com/richenhub/jirabot.git'
-                
-                sh 'git log -1 --oneline'
+                echo '🧹 Cleaning workspace...'
+                cleanWs()  
             }
         }
 
-        stage('Install dependencies') {
+        stage('Checkout') {
+            steps {
+                echo '📥 Cloning private repository...'
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: '*/main']],
+                    doGenerateSubmoduleConfigurations: false,
+                    extensions: [
+                        [$class: 'CleanBeforeCheckout'], 
+                        [$class: 'CloneOption', depth: 0, noTags: false, reference: '', shallow: false]
+                    ],
+                    userRemoteConfigs: [[
+                        credentialsId: 'github-credentials',
+                        url: 'https://github.com/richenhub/jirabot.git'
+                    ]]
+                ])
+                
+                sh 'git log -3 --oneline'
+                sh 'git branch -a' 
+            }
+        }
+
+         stage('Install dependencies') {
             steps {
                 echo '📦 Installing dependencies...'
                 sh 'node -v && npm -v'
-                sh 'npm ci'
+                sh 'rm -rf node_modules package-lock.json' 
+                sh 'npm install'
             }
         }
 
@@ -61,6 +81,7 @@ pipeline {
     post {
         success {
             echo '✅ Pipeline completed successfully!'
+            sh 'git log -1 --pretty=format:"Deployed commit: %h - %s (%an)"'
         }
         failure {
             echo '❌ Pipeline failed!'
