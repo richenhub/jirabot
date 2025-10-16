@@ -6,14 +6,15 @@ pipeline {
     }
 
     stages {
+
         stage('Checkout') {
             steps {
                 checkout([$class: 'GitSCM',
-                          branches: [[name: '*/main']],
-                          userRemoteConfigs: [[
-                              url: 'https://richenhub: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@github.com/richenhub/jirabot.git'
-                          ]],
-                          extensions: [[$class: 'WipeWorkspace']]])
+                        branches: [[name: '*/main']],
+                        userRemoteConfigs: [[
+                            url: 'https://richenhub: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@github.com/richenhub/jirabot.git'
+                        ]],
+                        extensions: [[$class: 'CleanBeforeCheckout']]
             }
         }
 
