@@ -3,22 +3,24 @@ pipeline {
 
     environment {
         NODE_ENV = 'production'
-        REPO_URL = 'https://richenhub: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@github.com/richenhub/jirabot.git'
         APP_NAME = 'jira-bot'
         APP_ENTRY = 'index.js'
+        // Используйте credentials вместо токена в URL
+        GIT_CREDENTIALS = credentials('github-token-id') 
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 echo '📥 Cloning repository...'
                 checkout([
                     $class: 'GitSCM',
                     branches: [[name: '*/main']],
-                    userRemoteConfigs: [[ url: "${env.REPO_URL}" ]],
+                    userRemoteConfigs: [[ 
+                        url: 'https://github.com/richenhub/jirabot.git',
+                        credentialsId: 'github-token-id' // ID из Jenkins Credentials
+                    ]],
                     extensions: [
-                        [$class: 'WipeWorkspace'], 
                         [$class: 'CloneOption', noTags: false, shallow: false, depth: 0, timeout: 20]
                     ]
                 ])
@@ -36,4 +38,32 @@ pipeline {
 
         stage('Build / Validate') {
             steps {
-                echo '
+                echo '🔨 Building and validating...'
+                // Добавьте ваши команды сборки/валидации
+                sh 'npm run build || true'  // если есть build скрипт
+                sh 'npm test || true'       // если есть тесты
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                echo '🚀 Deploying application...'
+                // Пример с PM2
+                sh """
+                    pm2 stop ${APP_NAME} || true
+                    pm2 start ${APP_ENTRY} --name ${APP_NAME}
+                    pm2 save
+                """
+            }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ Pipeline completed successfully!'
+        }
+        failure {
+            echo '❌ Pipeline failed!'
+        }
+    }
+}
