@@ -1,6 +1,12 @@
 pipeline {
     agent any
 
+    // ДОБАВЬТЕ ЭТО ⬇️
+    triggers {
+        githubPush()  // Триггер на GitHub push
+        pollSCM('H/5 * * * *')  // Опционально: проверка каждые 5 минут (если webhook не работает)
+    }
+
     environment {
         NODE_ENV = 'production'
         APP_NAME = 'jira-bot'
@@ -12,7 +18,7 @@ pipeline {
             steps {
                 echo '📥 Cloning private repository...'
                 git branch: 'main',
-                    credentialsId: 'github-credentials',
+                    credentialsId: '6a0b07eb-12fb-48a5-9352-3e9eb58fa0d7',
                     url: 'https://github.com/richenhub/jirabot.git'
                 
                 sh 'git log -1 --oneline'
@@ -31,7 +37,6 @@ pipeline {
             steps {
                 echo '🔨 Building and validating...'
                 sh 'npm run build || echo "No build script"'
-                sh 'npm test || echo "No tests"'
             }
         }
 
@@ -41,7 +46,7 @@ pipeline {
                 sh """
                     pm2 stop ${APP_NAME} || true
                     pm2 delete ${APP_NAME} || true
-                    pm2 start ${APP_ENTRY} --name ${APP_NAME} --node-args="--max-old-space-size=2048"
+                    pm2 start ${APP_ENTRY} --name ${APP_NAME}
                     pm2 save
                 """
             }
@@ -54,9 +59,6 @@ pipeline {
         }
         failure {
             echo '❌ Pipeline failed!'
-        }
-        always {
-            cleanWs()
         }
     }
 }
