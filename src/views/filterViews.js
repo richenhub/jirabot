@@ -86,12 +86,16 @@ const showTasksByFilter = async (
       issues.length
     }\nСтраница ${page + 1} из ${totalPages}\n\nJQL: ${filter.jql}\n\n`;
 
-    const buttons = pageTasks.map((i) => [
-      {
-        text: `🔹 ${i.key} — ${i.fields.summary}`,
-        callback_data: `taskedit_${i.key}`,
-      },
-    ]);
+    const buttons = pageTasks.map((i) => {
+      text += `🔹 <a href="https://${process.env.JIRA_API_URL}/browse/${i.key}">${i.key}</a>\n`;
+
+      return [
+        {
+          text: `🔹 ${i.key}`,
+          callback_data: `taskedit_${i.key}`,
+        },
+      ];
+    });
 
     const navButtons = [];
     if (page > 0)
