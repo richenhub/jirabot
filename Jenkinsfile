@@ -2,54 +2,49 @@ pipeline {
     agent any
 
     environment {
-        DEPLOY_USER = 'vps_user'
-        DEPLOY_HOST = 'your.server.com'
-        APP_PATH = '/opt/jbot'
-        RELEASES_PATH = "${APP_PATH}/releases"
-        CURRENT_PATH = "${APP_PATH}/current"
-        SSH_CREDENTIALS = 'vps_user'
+        NODE_ENV = 'production'
     }
 
     stages {
-        stage('Checkout SCM') {
+        stage('Checkout') {
             steps {
-                checkout scm
+                git branch: 'main', url: 'https://richenhub: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@github.com/richenhub/jirabot.git'
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Install dependencies') {
             steps {
                 sh 'npm ci'
             }
         }
 
-        stage('Deploy') {
+        stage('Build / Validate') {
             steps {
-                sshagent([SSH_CREDENTIALS]) {
-                    script {
-                        def releaseDir = "${RELEASES_PATH}/${env.BUILD_ID}"
-
-                        sh """
-                            ssh ${DEPLOY_USER}@${DEPLOY_HOST} '
-                                mkdir -p ${releaseDir} &&
-                                mkdir -p ${RELEASES_PATH}
-                            '
-                        """
-
-                        // Копируем файлы в новую папку
-                        sh """
-                            rsync -av --exclude='.git' ./ ${DEPLOY_USER}@${DEPLOY_HOST}:${releaseDir}/
-                        """
-
-                        // Обновляем символическую ссылку
-                        sh """
-                            ssh ${DEPLOY_USER}@${DEPLOY_HOST} '
-                                ln -sfn ${releaseDir} ${CURRENT_PATH}
-                            '
-                        """
-                    }
-                }
+                // Здесь можно добавить линтер, тесты и т.д.
+                echo 'Dependencies installed. Skipping build phase (Node bot).'
             }
+        }
+
+        stage('Restart bot') {
+            steps {
+                // Останавливаем и перезапускаем через pm2
+                sh '''
+                    if ! command -v pm2 >/dev/null; then
+                      npm install -g pm2
+                    fi
+                    pm2 delete jira-bot || true
+                    pm2 start index.js --name jira-bot
+                '''
+            }
+        }
+    }
+
+    post {
+        failure {
+            echo '❌ Build failed!'
+        }
+        success {
+            echo '✅ Bot updated and restarted successfully.'
         }
     }
 }
