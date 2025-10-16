@@ -23,8 +23,8 @@ pipeline {
                 
                 withCredentials([usernamePassword(
                     credentialsId: '6a0b07eb-12fb-48a5-9352-3e9eb58fa0d7',
-                    usernameVariable: 'richenhub',
-                    passwordVariable: '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'
+                    GIT_USERNAME: 'richenhub',
+                    GIT_TOKEN: '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'
                 )]) {
                     sh """
                         cd /opt/jbot
