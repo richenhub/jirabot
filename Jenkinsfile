@@ -27,7 +27,7 @@ pipeline {
                     $class: 'GitSCM',
                     branches: [[name: '*/main']],
                     userRemoteConfigs: [[
-                        credentialsId: 'github-ssh',  // ← ИСПРАВЛЕНО
+                        credentialsId: '6a0b07eb-12fb-48a5-9352-3e9eb58fa0d7', 
                         url: 'https://github.com/richenhub/jirabot.git'
                     ]]
                 ])
