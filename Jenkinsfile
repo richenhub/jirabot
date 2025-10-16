@@ -15,8 +15,14 @@ pipeline {
                     userRemoteConfigs: [[
                         url: 'https://richenhub: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@github.com/richenhub/jirabot.git'
                     ]],
-                    extensions: [[$class: 'WipeWorkspace']]
+                    extensions: [
+                        [$class: 'WipeWorkspace'],
+                        [$class: 'CloneOption', noTags: false, shallow: false, depth: 0, reference: '', timeout: 20]
+                    ]
+                    
                 ])
+                sh 'git status'
+                sh 'git log -1'
             }
         }
 
