@@ -20,40 +20,40 @@ pipeline {
         stage('Checkout') {
             steps {
                 echo '📥 Fetching latest code from GitHub...'
-                deleteDir()
                 
-                git branch: 'main',
+                withCredentials([usernamePassword(
                     credentialsId: '6a0b07eb-12fb-48a5-9352-3e9eb58fa0d7',
-                    url: 'https://github.com/richenhub/jirabot.git'
-                
-                sh 'git log -1 --oneline'
+                    usernameVariable: 'richenhub',
+                    passwordVariable: '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'
+                )]) {
+                    sh """
+                        cd /opt/jbot
+                        
+                        # Сбросить любые локальные изменения
+                        git reset --hard
+                        git clean -fd
+                        
+                        # Обновить remote URL с credentials
+                        git remote set-url origin https://${GIT_USERNAME}:${GIT_TOKEN}@github.com/richenhub/jirabot.git
+                        
+                        # Получить последние изменения
+                        git fetch origin main
+                        
+                        # Переключиться на main и обновить
+                        git checkout main
+                        git reset --hard origin/main
+                        
+                        echo "✅ Updated to latest commit:"
+                        git log -1 --oneline
+                    """
+                }
             }
         }
-        // stage('Checkout') {
-        //     steps {
-        //         echo '📥 Fetching latest code from GitHub...'
-        //         deleteDir()
-
-        //         sh 'git checkout main'
-                
-        //         checkout([
-        //             $class: 'GitSCM',
-        //             branches: [[name: '*/main']],
-        //             userRemoteConfigs: [[
-        //                 credentialsId: '6a0b07eb-12fb-48a5-9352-3e9eb58fa0d7',
-        //                 url: 'https://github.com/richenhub/jirabot.git'
-        //             ]]
-        //         ])
-
-                
-        //         sh 'git log -1 --oneline'
-        //     }
-        // }
 
         stage('Install dependencies') {
             steps {
                 echo '📦 Installing dependencies...'
-                sh 'npm ci --production'
+                sh 'cd /opt/jbot && npm ci --production'
             }
         }
 
@@ -65,16 +65,13 @@ pipeline {
                     pm2 stop ${APP_NAME} || true
                     pm2 delete ${APP_NAME} || true
                     
-                    # Запустить через npm start
-                    pm2 start npm --name ${APP_NAME} -- start
-                    
-                    # Или если нужно указать директорию
-                    # pm2 start npm --name ${APP_NAME} --cwd \$(pwd) -- start
-                    
+                    # Запустить из /opt/jbot
+                    cd /opt/jbot
+                    pm2 start npm --name ${APP_NAME} --cwd /opt/jbot -- start
                     pm2 save
                     
                     echo "=== Deployment Complete ==="
-                    echo "Running from: \$(pwd)"
+                    echo "Running from: /opt/jbot"
                     pm2 list
                     pm2 logs ${APP_NAME} --lines 20 --nostream
                 """

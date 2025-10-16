@@ -110,7 +110,6 @@ const showTasksByFilter = async (
       });
     if (navButtons.length) buttons.push(navButtons);
 
-    // кнопка назад к фильтрам
     buttons.push([{ text: "← К фильтрам", callback_data: "back_to_filters" }]);
 
     const opts = {
