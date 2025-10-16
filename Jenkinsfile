@@ -22,17 +22,13 @@ pipeline {
                 echo '📥 Fetching latest code from GitHub...'
                 deleteDir()
                 
-                withCredentials([string(credentialsId: '6a0b07eb-12fb-48a5-9352-3e9eb58fa0d7', variable: 'TOKEN')]) {
-                    sh """
-                        git clone https://$TOKEN@github.com/richenhub/jirabot.git .
-                        git fetch origin main
-                        git reset --hard origin/main
-                        git log -1 --oneline
-                    """
-                }
+                git branch: 'main',
+                    credentialsId: '6a0b07eb-12fb-48a5-9352-3e9eb58fa0d7',
+                    url: 'https://github.com/richenhub/jirabot.git'
+                
+                sh 'git log -1 --oneline'
             }
         }
-
         // stage('Checkout') {
         //     steps {
         //         echo '📥 Fetching latest code from GitHub...'
