@@ -84,14 +84,12 @@ const showTasksByFilter = async (
 
     let text = `📋 ${escapeHtml(filter.name)}\nВсего задач: ${
       issues.length
-    }\nСтраница ${page + 1} из ${totalPages}\n\n`;
+    }\nСтраница ${page + 1} из ${totalPages}\n\nJQL: ${filter.jql}`;
 
     const buttons = [];
 
     pageTasks.forEach((i) => {
-      text += `🔹 <a href="https://${process.env.JIRA_API_URL}/browse/${
-        i.key
-      }">${escapeHtml(i.key)} — ${escapeHtml(i.fields.summary)}</a>\n`;
+      text += `🔹 <a href="https://${process.env.JIRA_API_URL}/browse/${i.key}">${i.key} — ${i.fields.summary}</a>\n`;
 
       buttons.push([
         {
