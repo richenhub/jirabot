@@ -4,32 +4,14 @@ const { mainMenu } = require("../utils/keyboards");
 const { showTaskEdit } = require("../views/taskViews");
 
 const setupCommandHandlers = (bot) => {
-  bot.onText(/\/start(?: (.+))?/, async (msg, match) => {
+  bot.onText(/\/start/, async (msg) => {
     const chatId = msg.chat.id;
-    const param = match[1];
     const userData = userStore.get(chatId);
 
-    if (!param) {
-      if (userData?.token) {
-        return bot.sendMessage(chatId, "Главное меню:", [...mainMenu]);
-      }
-      return bot.sendMessage(chatId, "Для начала работы введите /login");
+    if (userData?.token) {
+      return bot.sendMessage(chatId, "Главное меню:", [...mainMenu]);
     }
-
-    if (param.startsWith("te_")) {
-      const issueKey = param.replace("te_", "");
-      if (!userData?.token) {
-        await bot.sendMessage(
-          chatId,
-          `Чтобы открыть задачу ${issueKey}, сначала выполните /login`
-        );
-        return;
-      }
-      await showTaskEdit(bot, chatId, issueKey);
-      return;
-    }
-
-    bot.sendMessage(chatId, `Неизвестная команда запуска: ${param}`);
+    return bot.sendMessage(chatId, "Для начала работы введите /login");
   });
 
   bot.onText(/\/login/, (msg) => {

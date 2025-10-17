@@ -47,7 +47,7 @@ const notifyAssigneeStatusChange = async (
               [
                 {
                   text: "Открыть задачу",
-                  url: `https://t.me/${process.env.BOT_LOGIN}?start=te_${issueKey}`,
+                  callback_data: `te_${issueKey}`,
                 },
               ],
             ],
@@ -98,7 +98,7 @@ const notifyNewAssignee = async (
               [
                 {
                   text: "Открыть задачу",
-                  url: `https://t.me/${process.env.BOT_LOGIN}?start=te_${issueKey}`,
+                  callback_data: `te_${issueKey}`,
                 },
               ],
             ],
@@ -178,7 +178,6 @@ const checkUserNotifications = async (bot, user) => {
         const prevState = user.issueStates?.[issueKey];
 
         if (prevState) {
-          // Задача уже отслеживалась - проверяем изменения
           if (prevState.status !== issue.fields.status.name) {
             statusChanges.push({
               issue,
@@ -194,7 +193,6 @@ const checkUserNotifications = async (bot, user) => {
             newAssignments.push(issue);
           }
         }
-        // Если prevState нет - это первый раз видим задачу, просто сохраняем без уведомления
       }
     }
 
@@ -212,7 +210,7 @@ const checkUserNotifications = async (bot, user) => {
               [
                 {
                   text: "Открыть задачу",
-                  url: `https://t.me/${process.env.BOT_LOGIN}?start=te_${issue.key}`,
+                  callback_data: `te_${issue.key}`,
                 },
               ],
             ],
@@ -239,7 +237,7 @@ const checkUserNotifications = async (bot, user) => {
               [
                 {
                   text: "Открыть задачу",
-                  url: `https://t.me/${process.env.BOT_LOGIN}?start=te_${change.issue.key}`,
+                  callback_data: `te_${change.issue.key}`,
                 },
               ],
             ],
@@ -308,7 +306,7 @@ const checkUserNotifications = async (bot, user) => {
                     [
                       {
                         text: "Открыть задачу",
-                        url: `https://t.me/${process.env.BOT_LOGIN}?start=te_${issue.key}`,
+                        callback_data: `te_${issue.key}`,
                       },
                     ],
                   ],
