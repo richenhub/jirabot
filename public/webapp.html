@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JAssist</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        background: var(--tg-theme-bg-color, #f5f5f5);
+        color: var(--tg-theme-text-color, #000000);
+        padding: 0;
+        margin: 0;
+      }
+
+      .container {
+        max-width: 100%;
+        padding: 16px;
+      }
+
+      .header {
+        padding: 16px 0;
+        border-bottom: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+        margin-bottom: 16px;
+        background: var(--tg-theme-bg-color, #ffffff);
+      }
+
+      .header h1 {
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+
+      .header p {
+        font-size: 14px;
+        color: var(--tg-theme-hint-color, #999);
+      }
+
+      .tabs {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        margin-bottom: 16px;
+        padding-bottom: 8px;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .tab {
+        padding: 10px 20px;
+        background: var(--tg-theme-button-color, #3390ec);
+        color: var(--tg-theme-button-text-color, #ffffff);
+        border: none;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: opacity 0.2s;
+      }
+
+      .tab:active {
+        opacity: 0.7;
+      }
+
+      .tab.active {
+        background: var(--tg-theme-button-color, #3390ec);
+        opacity: 1;
+      }
+
+      .tab:not(.active) {
+        background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+        color: var(--tg-theme-text-color, #000000);
+      }
+
+      /* Панель фильтров */
+      .filters-panel {
+        background: var(--tg-theme-secondary-bg-color, #ffffff);
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 16px;
+      }
+
+      .filter-row {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 8px;
+        flex-wrap: wrap;
+      }
+
+      .filter-input {
+        flex: 1;
+        min-width: 200px;
+        padding: 10px 12px;
+        border: 1px solid var(--tg-theme-hint-color, #ddd);
+        border-radius: 8px;
+        font-size: 14px;
+        background: var(--tg-theme-bg-color, #fff);
+        color: var(--tg-theme-text-color, #000);
+      }
+
+      .filter-select {
+        flex: 1;
+        min-width: 150px;
+        padding: 10px 12px;
+        border: 1px solid var(--tg-theme-hint-color, #ddd);
+        border-radius: 8px;
+        font-size: 14px;
+        background: var(--tg-theme-bg-color, #fff);
+        color: var(--tg-theme-text-color, #000);
+        cursor: pointer;
+      }
+
+      .filter-btn {
+        padding: 10px 20px;
+        background: var(--tg-theme-button-color, #3390ec);
+        color: var(--tg-theme-button-text-color, #fff);
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+
+      .filter-btn:active {
+        opacity: 0.7;
+      }
+
+      .filter-btn.secondary {
+        background: var(--tg-theme-secondary-bg-color, #e0e0e0);
+        color: var(--tg-theme-text-color, #000);
+      }
+
+      /* Статистика */
+      .stats-bar {
+        display: flex;
+        gap: 12px;
+        overflow-x: auto;
+        margin-bottom: 16px;
+        padding-bottom: 8px;
+      }
+
+      .stat-card {
+        min-width: 120px;
+        background: var(--tg-theme-secondary-bg-color, #fff);
+        border-radius: 12px;
+        padding: 12px;
+        text-align: center;
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+
+      .stat-card:active {
+        transform: scale(0.95);
+      }
+
+      .stat-card.active {
+        background: var(--tg-theme-button-color, #3390ec);
+        color: var(--tg-theme-button-text-color, #fff);
+      }
+
+      .stat-value {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+
+      .stat-label {
+        font-size: 12px;
+        opacity: 0.8;
+      }
+
+      .content {
+        display: none;
+      }
+
+      .content.active {
+        display: block;
+      }
+
+      .task-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .task-card {
+        background: var(--tg-theme-secondary-bg-color, #ffffff);
+        border-radius: 12px;
+        padding: 16px;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      }
+
+      .task-card:active {
+        transform: scale(0.98);
+      }
+
+      .task-card:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .task-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+
+      .task-key {
+        font-size: 12px;
+        color: var(--tg-theme-link-color, #3390ec);
+        font-weight: 600;
+      }
+
+      .task-priority {
+        font-size: 11px;
+        padding: 3px 8px;
+        border-radius: 6px;
+        font-weight: 600;
+      }
+
+      .priority-highest {
+        background: #ff5630;
+        color: white;
+      }
+      .priority-high {
+        background: #ff8b00;
+        color: white;
+      }
+      .priority-medium {
+        background: #ffab00;
+        color: white;
+      }
+      .priority-low {
+        background: #36b37e;
+        color: white;
+      }
+      .priority-lowest {
+        background: #00b8d9;
+        color: white;
+      }
+
+      .task-summary {
+        font-size: 15px;
+        font-weight: 500;
+        margin-bottom: 8px;
+        line-height: 1.4;
+      }
+
+      .task-meta {
+        display: flex;
+        gap: 12px;
+        font-size: 12px;
+        color: var(--tg-theme-hint-color, #999);
+        flex-wrap: wrap;
+      }
+
+      .task-meta span {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .status-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-size: 11px;
+        font-weight: 600;
+        background: var(--tg-theme-button-color, #3390ec);
+        color: var(--tg-theme-button-text-color, #ffffff);
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--tg-theme-hint-color, #999);
+      }
+
+      .empty-state-icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+      }
+
+      .empty-state h3 {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: var(--tg-theme-text-color, #000);
+      }
+
+      .btn-primary {
+        width: 100%;
+        padding: 14px;
+        background: var(--tg-theme-button-color, #3390ec);
+        color: var(--tg-theme-button-text-color, #ffffff);
+        border: none;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 16px;
+        transition: opacity 0.2s;
+      }
+
+      .btn-primary:active {
+        opacity: 0.7;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 40px;
+        color: var(--tg-theme-hint-color, #999);
+      }
+
+      .spinner {
+        width: 40px;
+        height: 40px;
+        margin: 0 auto 16px;
+        border: 3px solid var(--tg-theme-hint-color, #e0e0e0);
+        border-top-color: var(--tg-theme-button-color, #3390ec);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .task-detail {
+        background: var(--tg-theme-secondary-bg-color, #ffffff);
+        border-radius: 12px;
+        padding: 20px;
+      }
+
+      .task-detail-header {
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+      }
+
+      .task-detail-key {
+        font-size: 14px;
+        color: var(--tg-theme-link-color, #3390ec);
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+
+      .task-detail-summary {
+        font-size: 20px;
+        font-weight: 600;
+        line-height: 1.4;
+      }
+
+      .task-detail-section {
+        margin-bottom: 20px;
+      }
+
+      .task-detail-section h3 {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--tg-theme-hint-color, #999);
+        text-transform: uppercase;
+        margin-bottom: 8px;
+        letter-spacing: 0.5px;
+      }
+
+      .task-detail-section p {
+        font-size: 15px;
+        line-height: 1.6;
+      }
+
+      .action-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-top: 20px;
+      }
+
+      .action-btn {
+        padding: 12px;
+        background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+        border: none;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: opacity 0.2s;
+      }
+
+      .action-btn:active {
+        opacity: 0.7;
+      }
+
+      .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 16px;
+        padding: 16px 0;
+      }
+
+      .pagination-btn {
+        padding: 8px 16px;
+        background: var(--tg-theme-secondary-bg-color, #fff);
+        border: 1px solid var(--tg-theme-hint-color, #ddd);
+        border-radius: 8px;
+        font-size: 14px;
+        cursor: pointer;
+        min-width: 40px;
+      }
+
+      .pagination-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      .pagination-btn.active {
+        background: var(--tg-theme-button-color, #3390ec);
+        color: var(--tg-theme-button-text-color, #fff);
+        border-color: var(--tg-theme-button-color, #3390ec);
+      }
+
+      /* Настройки и фильтры */
+      .settings-list,
+      .filter-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .setting-item,
+      .filter-card {
+        background: var(--tg-theme-secondary-bg-color, #ffffff);
+        border-radius: 12px;
+        padding: 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .setting-info h3,
+      .filter-info h3 {
+        font-size: 15px;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+
+      .setting-info p,
+      .filter-info p {
+        font-size: 12px;
+        color: var(--tg-theme-hint-color, #999);
+      }
+
+      .toggle {
+        width: 50px;
+        height: 28px;
+        background: var(--tg-theme-hint-color, #ccc);
+        border-radius: 14px;
+        position: relative;
+        cursor: pointer;
+        transition: background 0.3s;
+      }
+
+      .toggle.active {
+        background: var(--tg-theme-button-color, #3390ec);
+      }
+
+      .toggle::after {
+        content: "";
+        width: 24px;
+        height: 24px;
+        background: white;
+        border-radius: 50%;
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        transition: left 0.3s;
+      }
+
+      .toggle.active::after {
+        left: 24px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>JAssist</h1>
+        <p id="user-info">Загрузка...</p>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="tasks">📋 Задачи</button>
+        <button class="tab" data-tab="filters">🔎 Фильтры</button>
+        <button class="tab" data-tab="settings">⚙️ Настройки</button>
+      </div>
+
+      <!-- Вкладка: Задачи -->
+      <div class="content active" id="tasks-content">
+        <!-- Панель фильтров -->
+        <div class="filters-panel">
+          <div class="filter-row">
+            <input
+              type="text"
+              class="filter-input"
+              id="search-input"
+              placeholder="🔍 Поиск по тексту..."
+            />
+          </div>
+          <div class="filter-row">
+            <select
+              class="filter-select"
+              id="assignee-filter"
+              onchange="loadTasks()"
+            >
+              <option value="me">👤 Мои задачи</option>
+              <option value="all">👥 Все задачи</option>
+              <option value="unassigned">⚪ Без исполнителя</option>
+            </select>
+            <select class="filter-select" id="status-filter">
+              <option value="">📊 Все статусы</option>
+            </select>
+            <select class="filter-select" id="priority-filter">
+              <option value="">🎯 Все приоритеты</option>
+              <option value="Highest">Критический</option>
+              <option value="High">Высокий</option>
+              <option value="Medium">Средний</option>
+              <option value="Low">Низкий</option>
+              <option value="Lowest">Минимальный</option>
+            </select>
+          </div>
+          <div class="filter-row">
+            <select class="filter-select" id="date-filter">
+              <option value="">📅 За всё время</option>
+              <option value="today">Сегодня</option>
+              <option value="week">За неделю</option>
+              <option value="month">За месяц</option>
+              <option value="custom">Указать период</option>
+            </select>
+            <button
+              class="filter-btn"
+              id="apply-filters-btn"
+              onclick="applyFilters()"
+            >
+              Применить
+            </button>
+
+            <button class="filter-btn secondary" onclick="resetFilters()">
+              Сбросить
+            </button>
+          </div>
+        </div>
+
+        <!-- Статистика по статусам -->
+        <div class="stats-bar" id="stats-bar"></div>
+
+        <!-- Список задач -->
+        <div id="tasks-list">
+          <div class="loading">
+            <div class="spinner"></div>
+            <p>Загрузка задач...</p>
+          </div>
+        </div>
+
+        <!-- Пагинация -->
+        <div class="pagination" id="pagination" style="display: none"></div>
+      </div>
+
+      <!-- Вкладка: Фильтры -->
+      <div class="content" id="filters-content">
+        <div class="filter-list">
+          <div class="empty-state">
+            <div class="empty-state-icon">🔍</div>
+            <h3>Нет фильтров</h3>
+            <p>Создайте первый фильтр для быстрого поиска задач</p>
+            <button class="btn-primary" onclick="addFilter()">
+              ➕ Добавить фильтр
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Вкладка: Настройки -->
+      <div class="content" id="settings-content">
+        <div class="settings-list">
+          <div class="setting-item">
+            <div class="setting-info">
+              <h3>Все уведомления</h3>
+              <p>Получать уведомления об изменениях</p>
+            </div>
+            <div
+              class="toggle active"
+              onclick="toggleSetting(this, 'notifications')"
+            ></div>
+          </div>
+          <div class="setting-item">
+            <div class="setting-info">
+              <h3>Уведомления о комментариях</h3>
+              <p>Новые комментарии в ваших задачах</p>
+            </div>
+            <div
+              class="toggle active"
+              onclick="toggleSetting(this, 'comments')"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

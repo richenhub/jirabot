@@ -4,12 +4,13 @@ const { mainMenu } = require("../utils/keyboards");
 const { showTaskEdit } = require("../views/taskViews");
 
 const setupCommandHandlers = (bot) => {
+  // /start - должен быть ПЕРВЫМ
   bot.onText(/\/start/, async (msg) => {
     const chatId = msg.chat.id;
     const userData = userStore.get(chatId);
 
     if (userData?.token) {
-      return bot.sendMessage(chatId, "Главное меню:", [...mainMenu]);
+      return bot.sendMessage(chatId, "Главное меню:", mainMenu);
     }
     return bot.sendMessage(chatId, "Для начала работы введите /login");
   });
@@ -59,6 +60,34 @@ const setupCommandHandlers = (bot) => {
     const chatId = msg.chat.id;
     bot.sendMessage(chatId, "☰ Главное меню:", {
       ...mainMenu,
+    });
+  });
+
+  bot.onText(/\/webapp/, (msg) => {
+    const chatId = msg.chat.id;
+    const userData = userStore.get(chatId);
+
+    if (!userData || !userData.token) {
+      return bot.sendMessage(
+        chatId,
+        "Сначала выполните /login для авторизации в Jira"
+      );
+    }
+
+    bot.sendMessage(chatId, "Откройте веб-приложение для удобной работы:", {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: "🚀 Открыть Jira Bot",
+              web_app: {
+                url:
+                  process.env.WEBAPP_URL || "https://api.hvcb.ru/webapp.html",
+              },
+            },
+          ],
+        ],
+      },
     });
   });
 

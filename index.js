@@ -8,6 +8,7 @@ const {
   startGlobalNotificationPolling,
   stopGlobalNotificationPolling,
 } = require("./src/services/notificationService");
+const { createWebAppServer } = require("./webappServer");
 
 const bot = new TelegramBot(process.env.TELEGRAM_TOKEN, {
   polling: {
@@ -31,25 +32,55 @@ bot.on("polling_error", (error) => {
   }
 });
 
+bot.on("message", (msg) => {
+  console.log(`📨 Message received from ${msg.from.id}: ${msg.text}`);
+});
+
 setupCommandHandlers(bot);
 setupCallbackHandlers(bot);
 setupMessageHandlers(bot);
 
-//  bot.once("polling", () => {
-//    console.log(
-//      `✅ [${new Date().toISOString()}] Bot started (PID: ${process.pid})`
-//    );
-//    startGlobalNotificationPolling(bot);
-//  });
+startGlobalNotificationPolling(bot);
+
+const app = createWebAppServer(bot);
+const PORT = process.env.PORT || 3000;
+
+const server = app.listen(PORT, () => {
+  console.log(
+    `✅ [${new Date().toISOString()}] Bot started (PID: ${process.pid})`
+  );
+  console.log(`🌐 WebApp API server running on port ${PORT}`);
+  console.log(
+    `📱 WebApp URL: ${
+      process.env.WEBAPP_URL || `http://localhost:${PORT}`
+    }/index.html`
+  );
+});
 
 const gracefulShutdown = () => {
   console.log("\n🛑 Shutting down bot...");
   stopGlobalNotificationPolling();
   bot.stopPolling();
-  process.exit(0);
-};
 
-startGlobalNotificationPolling(bot);
+  server.close(() => {
+    console.log("🌐 WebApp server closed");
+    process.exit(0);
+  });
+
+  setTimeout(() => {
+    console.error("⚠️ Forced shutdown");
+    process.exit(1);
+  }, 10000);
+};
 
 process.on("SIGINT", gracefulShutdown);
 process.on("SIGTERM", gracefulShutdown);
+
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("Unhandled Rejection at:", promise, "reason:", reason);
+});
+
+process.on("uncaughtException", (error) => {
+  console.error("Uncaught Exception:", error);
+  gracefulShutdown();
+});

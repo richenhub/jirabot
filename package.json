@@ -5,7 +5,13 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon --watch . --ext js,json index.js"
+    "dev": "nodemon --watch . --ext js,json index.js",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:stop": "pm2 stop jira-bot",
+    "pm2:restart": "pm2 restart jira-bot",
+    "pm2:logs": "pm2 logs jira-bot",
+    "pm2:status": "pm2 status",
+    "pm2:delete": "pm2 delete jira-bot"
   },
   "keywords": [
     "telegram",
@@ -16,13 +22,18 @@
   "license": "ISC",
   "dependencies": {
     "axios": "^1.6.0",
+    "cors": "^2.8.5",
     "dotenv": "^16.3.1",
-    "https-proxy-agent": "^7.0.6",
+    "express": "^5.1.0",
     "node-telegram-bot-api": "^0.64.0",
     "openai": "^6.3.0",
     "undici": "^7.16.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
   }
 }

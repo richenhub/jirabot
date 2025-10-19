@@ -1,4 +1,5 @@
 const userStore = require("../utils/userStore");
+const { mainMenu } = require("../utils/keyboards");
 const {
   getTransitions,
   changeStatus,
@@ -109,12 +110,17 @@ const changeIssueStatus = async (bot, chatId, issueKey, transitionId) => {
 
 const setupCallbackHandlers = (bot) => {
   bot.on("callback_query", async (query) => {
+    console.log("🔘 CALLBACK:", query.data, "from", query.from.id);
+
     const chatId = query.message.chat.id;
     const data = query.data;
     const userData = userStore.get(chatId);
 
     try {
-      if (data === "toggle_notifications") {
+      if (data === "main_menu") {
+        await bot.sendMessage(chatId, "☰ Главное меню:", mainMenu);
+        bot.answerCallbackQuery(query.id);
+      } else if (data === "toggle_notifications") {
         const newState = !(userData.notificationsEnabled !== false);
         userStore.set(chatId, { notificationsEnabled: newState });
 
@@ -185,12 +191,8 @@ const setupCallbackHandlers = (bot) => {
       } else if (data.startsWith("set_status_")) {
         const params = data.replace("set_status_", "");
         const [issueKey, transitionId] = params.split(":");
-        try {
-          await changeIssueStatus(bot, chatId, issueKey, transitionId);
-          bot.answerCallbackQuery(query.id, { text: "Статус изменён" });
-        } catch (error) {
-          bot.answerCallbackQuery(query.id, { text: "Ошибка смены статуса" });
-        }
+        await changeIssueStatus(bot, chatId, issueKey, transitionId);
+        bot.answerCallbackQuery(query.id, { text: "Статус изменён" });
       } else if (data.startsWith("change_assignee_")) {
         const issueKey = data.replace("change_assignee_", "");
         bot.answerCallbackQuery(query.id);
@@ -356,9 +358,11 @@ const setupCallbackHandlers = (bot) => {
             ? "Уведомления о комментариях включены"
             : "Уведомления о комментариях выключены",
         });
+      } else {
+        bot.answerCallbackQuery(query.id);
       }
     } catch (error) {
-      console.error("Callback error:", error);
+      console.error("❌ Callback error:", error);
       bot.answerCallbackQuery(query.id, { text: "Произошла ошибка" });
     }
   });
